@@ -1,3 +1,3 @@
-__version__ = '0.7.2'
+__version__ = 'DagsterModule(name='dagit', is_library=False, additional_steps=['./build_js.sh'])'
 
-__nightly__ = '2020.02.27'
+__nightly__ = '0.7.2'
