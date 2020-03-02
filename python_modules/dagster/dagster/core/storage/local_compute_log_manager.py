@@ -1,17 +1,18 @@
 import hashlib
 import os
 import sys
-from collections import defaultdict
-from contextlib import contextmanager
+from collections import defaultdict, deque
+from contextlib import contextmanager, ExitStack
 
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers.polling import PollingObserver
 
 from dagster import check
-from dagster.core.execution.compute_logs import mirror_stream_to_file
+from dagster.core.execution.compute_logs import mirror_stream_to_file, mirror_file_to_file
 from dagster.core.serdes import ConfigurableClass, ConfigurableClassData
 from dagster.core.storage.pipeline_run import PipelineRun
 from dagster.utils import ensure_dir, touch_file
+
 
 from .compute_log_manager import (
     MAX_BYTES_FILE_READ,
@@ -36,18 +37,43 @@ class LocalComputeLogManager(ComputeLogManager, ConfigurableClass):
         self._base_dir = base_dir
         self._subscription_manager = LocalComputeLogSubscriptionManager(self)
         self._inst_data = check.opt_inst_param(inst_data, 'inst_data', ConfigurableClassData)
+        self._io_files = deque()
+        self._context_stack = ExitStack()
 
     @contextmanager
     def _watch_logs(self, pipeline_run, step_key=None):
         check.inst_param(pipeline_run, 'pipeline_run', PipelineRun)
         check.opt_str_param(step_key, 'step_key')
-
         key = self.get_key(pipeline_run, step_key)
         outpath = self.get_local_path(pipeline_run.run_id, key, ComputeIOType.STDOUT)
         errpath = self.get_local_path(pipeline_run.run_id, key, ComputeIOType.STDERR)
-        with mirror_stream_to_file(sys.stdout, outpath):
-            with mirror_stream_to_file(sys.stderr, errpath):
-                yield
+        self._add_watch_to_stack(outpath, errpath)
+        yield
+        self._remove_watch_from_stack(outpath, errpath)
+
+    def _add_watch_to_stack(self, outpath, errpath):
+        self._context_stack.close()
+        self._io_files.append(tuple([outpath, errpath]))
+        self._rebuild_stack()
+
+    def _remove_watch_from_stack(self, outpath, errpath):
+        self._context_stack.close()
+        self._io_files.pop()
+        self._rebuild_stack()
+
+    def _rebuild_stack(self):
+        last_outpath = None
+        last_errpath = None
+        for io_files in reversed(self._io_files):
+            _outpath, _errpath = io_files
+            if not last_outpath or not last_errpath:
+                self._context_stack.enter_context(mirror_stream_to_file(sys.stdout, _outpath))
+                self._context_stack.enter_context(mirror_stream_to_file(sys.stderr, _errpath))
+            else:
+                self._context_stack.enter_context(mirror_file_to_file(last_outpath, _outpath))
+                self._context_stack.enter_context(mirror_file_to_file(last_errpath, _errpath))
+            last_outpath = _outpath
+            last_errpath = _errpath
 
     @property
     def inst_data(self):

@@ -3,7 +3,6 @@ from __future__ import print_function
 import os
 import random
 import string
-import sys
 import time
 
 import pytest
@@ -27,7 +26,6 @@ from dagster.utils import get_multiprocessing_context
 
 HELLO_SOLID = 'HELLO SOLID'
 HELLO_RESOURCE = 'HELLO RESOURCE'
-SEPARATOR = os.linesep if (os.name == 'nt' and sys.version_info < (3,)) else '\n'
 
 
 @resource
@@ -68,6 +66,11 @@ def test_compute_log_to_disk():
     manager = instance.compute_log_manager
     result = execute_pipeline(spew_pipeline, instance=instance)
     assert result.success
+    compute_io_path = manager.get_local_path(result.run_id, 'spew_pipeline', ComputeIOType.STDOUT)
+    assert os.path.exists(compute_io_path)
+    with open(compute_io_path, 'r') as stdout_file:
+        output = normalize_file_content(stdout_file.read())
+        assert output == '\n'.join([HELLO_RESOURCE, HELLO_SOLID, HELLO_SOLID])
 
     compute_steps = [
         event.step_key
@@ -99,6 +102,12 @@ def test_compute_log_to_disk_multiprocess():
     )
     assert result.success
 
+    compute_io_path = manager.get_local_path(result.run_id, 'spew_pipeline', ComputeIOType.STDOUT)
+    assert os.path.exists(compute_io_path)
+    with open(compute_io_path, 'r') as stdout_file:
+        output = normalize_file_content(stdout_file.read())
+        assert output == HELLO_RESOURCE
+
     compute_steps = [
         event.step_key
         for event in result.step_event_list
@@ -110,7 +119,10 @@ def test_compute_log_to_disk_multiprocess():
         compute_io_path = manager.get_local_path(result.run_id, step_key, ComputeIOType.STDOUT)
         assert os.path.exists(compute_io_path)
         with open(compute_io_path, 'r') as stdout_file:
-            assert normalize_file_content(stdout_file.read()) == HELLO_SOLID
+            # in multiprocess, the pipeline initialization logging is included with the step logs
+            assert normalize_file_content(stdout_file.read()) == '\n'.join(
+                [HELLO_RESOURCE, HELLO_SOLID]
+            )
 
 
 @pytest.mark.skipif(
@@ -162,7 +174,7 @@ def test_compute_log_manager_subscriptions():
     stderr = []
     stderr_observable.subscribe(stderr.append)
     assert len(stdout) == 1
-    assert stdout[0].data.startswith(HELLO_SOLID)
+    assert normalize_file_content(stdout[0].data).startswith(HELLO_SOLID)
     assert stdout[0].cursor in [12, 13]
     assert len(stderr) == 1
     assert stderr[0].cursor == len(stderr[0].data)
@@ -204,7 +216,7 @@ def test_long_solid_names():
     assert manager.is_watch_completed(result.run_id, step_key)
 
     stdout = manager.read_logs_file(result.run_id, step_key, ComputeIOType.STDOUT)
-    assert normalize_file_content(stdout.data) == HELLO_SOLID
+    assert normalize_file_content(stdout.data) == '\n'.join([HELLO_RESOURCE, HELLO_SOLID])
 
 
 def execute_inner(step_key, pipeline_run, instance_ref):

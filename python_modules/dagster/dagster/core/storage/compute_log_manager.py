@@ -71,6 +71,7 @@ class ComputeLogManager(six.with_metaclass(ABCMeta)):
             step_key (Optional[String]): The step_key for a compute step
         '''
 
+    @abstractmethod
     def get_local_path(self, run_id, key, io_type):
         '''Get the local path of the logfile for a given execution step.  This determines the
         location on the local filesystem to which stdout/stderr will be rerouted.

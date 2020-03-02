@@ -41,6 +41,7 @@ from dagster.core.execution.plan.plan import ExecutionPlan
 from dagster.core.execution.retries import Retries
 from dagster.core.storage.object_store import ObjectStoreOperation
 from dagster.core.types.dagster_type import DagsterTypeKind
+from dagster.utils import noop_context
 from dagster.utils.error import SerializableErrorInfo, serializable_error_info_from_exc_info
 from dagster.utils.timing import time_execution_scope
 
@@ -69,9 +70,16 @@ def inner_plan_execution_iterator(pipeline_context, execution_plan, retries):
             'expected step context to have all required resources',
         )
 
-        with pipeline_context.instance.compute_log_manager.watch(
-            step_context.pipeline_run, step_context.step.key
-        ):
+        if execution_plan.step_key_for_single_step_plans():
+            # if we are here, we have already entered started capture step events at the
+            # api level, in order to capture pipeline initialization events
+            watch_context = noop_context()
+        else:
+            watch_context = pipeline_context.instance.compute_log_manager.watch(
+                step_context.pipeline_run, step_context.step.key
+            )
+
+        with watch_context:
             # capture all of the logs for this step
             uncovered_inputs = pipeline_context.intermediates_manager.uncovered_inputs(
                 step_context, step

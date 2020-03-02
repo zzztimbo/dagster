@@ -22,13 +22,14 @@ def current_process_is_orphaned(parent_pid):
         return os.getppid() != parent_pid
 
 
-def tail_polling(filepath, stream=sys.stdout, parent_pid=None):
+def tail_polling(filepath, stream=sys.stdout, byte_offset=0, parent_pid=None):
     '''
     Tails a file and outputs the content to the specified stream via polling.
     The pid of the parent process (if provided) is checked to see if the tail process should be
     terminated, in case the parent is hard-killed / segfaults
     '''
     with open(filepath, 'r') as file:
+        file.seek(byte_offset)
         for block in iter(lambda: file.read(1024), None):
             if block:
                 print(block, end='', file=stream)
@@ -39,13 +40,14 @@ def tail_polling(filepath, stream=sys.stdout, parent_pid=None):
 
 
 def execute_polling(args):
-    if not args or len(args) != 2:
+    if not args or len(args) != 3:
         return
 
     filepath = args[0]
-    parent_pid = int(args[1])
+    byte_offset = int(args[1])
+    parent_pid = int(args[2])
 
-    tail_polling(filepath, sys.stdout, parent_pid)
+    tail_polling(filepath, sys.stdout, byte_offset, parent_pid)
 
 
 if __name__ == '__main__':

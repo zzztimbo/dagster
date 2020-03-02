@@ -114,28 +114,31 @@ def execute_run_iterator(pipeline, pipeline_run, instance):
         pipeline, environment_dict=pipeline_run.environment_dict, run_config=pipeline_run
     )
 
-    initialization_manager = pipeline_initialization_manager(
-        pipeline, pipeline_run.environment_dict, pipeline_run, instance, execution_plan
-    )
-    for event in initialization_manager.generate_setup_events():
-        yield event
-    pipeline_context = initialization_manager.get_object()
-    generator_closed = False
-    try:
-        if pipeline_context:
-            for event in _pipeline_execution_iterator(
-                pipeline_context, execution_plan, pipeline_run
-            ):
-                yield event
-    except GeneratorExit:
-        # Shouldn't happen, but avoid runtime-exception in case this generator gets GC-ed
-        # (see https://amir.rachum.com/blog/2017/03/03/generator-cleanup/).
-        generator_closed = True
-        raise
-    finally:
-        for event in initialization_manager.generate_teardown_events():
-            if not generator_closed:
-                yield event
+    with instance.compute_log_manager.watch(
+        pipeline_run, execution_plan.step_key_for_single_step_plans()
+    ):
+        initialization_manager = pipeline_initialization_manager(
+            pipeline, pipeline_run.environment_dict, pipeline_run, instance, execution_plan
+        )
+        for event in initialization_manager.generate_setup_events():
+            yield event
+        pipeline_context = initialization_manager.get_object()
+        generator_closed = False
+        try:
+            if pipeline_context:
+                for event in _pipeline_execution_iterator(
+                    pipeline_context, execution_plan, pipeline_run
+                ):
+                    yield event
+        except GeneratorExit:
+            # Shouldn't happen, but avoid runtime-exception in case this generator gets GC-ed
+            # (see https://amir.rachum.com/blog/2017/03/03/generator-cleanup/).
+            generator_closed = True
+            raise
+        finally:
+            for event in initialization_manager.generate_teardown_events():
+                if not generator_closed:
+                    yield event
 
 
 def execute_pipeline_iterator(pipeline, environment_dict=None, run_config=None, instance=None):
@@ -212,39 +215,42 @@ def execute_pipeline(
 
     pipeline_run = _create_run(instance, pipeline, run_config, environment_dict)
 
-    initialization_manager = pipeline_initialization_manager(
-        pipeline,
-        environment_dict,
-        pipeline_run,
-        instance,
-        execution_plan,
-        raise_on_error=raise_on_error,
-    )
-    event_list = list(initialization_manager.generate_setup_events())
-    pipeline_context = initialization_manager.get_object()
-    try:
-        if pipeline_context:
-            event_list.extend(
-                _pipeline_execution_iterator(pipeline_context, execution_plan, pipeline_run)
-            )
-    finally:
-        event_list.extend(initialization_manager.generate_teardown_events())
-    return PipelineExecutionResult(
-        pipeline,
-        run_config.run_id,
-        event_list,
-        lambda: scoped_pipeline_context(
+    with instance.compute_log_manager.watch(
+        pipeline_run, execution_plan.step_key_for_single_step_plans()
+    ):
+        initialization_manager = pipeline_initialization_manager(
             pipeline,
             environment_dict,
             pipeline_run,
             instance,
             execution_plan,
-            system_storage_data=SystemStorageData(
-                intermediates_manager=pipeline_context.intermediates_manager,
-                file_manager=pipeline_context.file_manager,
+            raise_on_error=raise_on_error,
+        )
+        event_list = list(initialization_manager.generate_setup_events())
+        pipeline_context = initialization_manager.get_object()
+        try:
+            if pipeline_context:
+                event_list.extend(
+                    _pipeline_execution_iterator(pipeline_context, execution_plan, pipeline_run)
+                )
+        finally:
+            event_list.extend(initialization_manager.generate_teardown_events())
+        return PipelineExecutionResult(
+            pipeline,
+            run_config.run_id,
+            event_list,
+            lambda: scoped_pipeline_context(
+                pipeline,
+                environment_dict,
+                pipeline_run,
+                instance,
+                execution_plan,
+                system_storage_data=SystemStorageData(
+                    intermediates_manager=pipeline_context.intermediates_manager,
+                    file_manager=pipeline_context.file_manager,
+                ),
             ),
-        ),
-    )
+        )
 
 
 def execute_pipeline_with_preset(
@@ -325,30 +331,32 @@ def execute_plan_iterator(
     retries = check.opt_inst_param(retries, 'retries', Retries, Retries.disabled_mode())
     environment_dict = check.opt_dict_param(environment_dict, 'environment_dict')
 
-    initialization_manager = pipeline_initialization_manager(
-        execution_plan.pipeline_def, environment_dict, pipeline_run, instance, execution_plan
-    )
-    for event in initialization_manager.generate_setup_events():
-        yield event
+    with instance.compute_log_manager.watch(
+        pipeline_run, execution_plan.step_key_for_single_step_plans()
+    ):
+        initialization_manager = pipeline_initialization_manager(
+            execution_plan.pipeline_def, environment_dict, pipeline_run, instance, execution_plan
+        )
+        for event in initialization_manager.generate_setup_events():
+            yield event
 
-    pipeline_context = initialization_manager.get_object()
-
-    generator_closed = False
-    try:
-        if pipeline_context:
-            for event in inner_plan_execution_iterator(
-                pipeline_context, execution_plan=execution_plan, retries=retries
-            ):
-                yield event
-    except GeneratorExit:
-        # Shouldn't happen, but avoid runtime-exception in case this generator gets GC-ed
-        # (see https://amir.rachum.com/blog/2017/03/03/generator-cleanup/).
-        generator_closed = True
-        raise
-    finally:
-        for event in initialization_manager.generate_teardown_events():
-            if not generator_closed:
-                yield event
+        pipeline_context = initialization_manager.get_object()
+        generator_closed = False
+        try:
+            if pipeline_context:
+                for event in inner_plan_execution_iterator(
+                    pipeline_context, execution_plan=execution_plan, retries=retries
+                ):
+                    yield event
+        except GeneratorExit:
+            # Shouldn't happen, but avoid runtime-exception in case this generator gets GC-ed
+            # (see https://amir.rachum.com/blog/2017/03/03/generator-cleanup/).
+            generator_closed = True
+            raise
+        finally:
+            for event in initialization_manager.generate_teardown_events():
+                if not generator_closed:
+                    yield event
 
 
 def execute_plan(execution_plan, instance, pipeline_run, environment_dict=None, retries=None):

@@ -414,3 +414,8 @@ def utc_datetime_from_timestamp(timestamp):
         tz = pytz.utc
 
     return datetime.datetime.fromtimestamp(timestamp, tz=tz)
+
+
+@contextlib.contextmanager
+def noop_context():
+    yield
