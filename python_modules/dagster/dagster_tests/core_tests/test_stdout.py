@@ -53,6 +53,8 @@ def define_pipeline():
 
     return spew_pipeline
 
+def normalize_file_content(s):
+    return '\n'.join([line for line in s.replace(os.linesep, '\n').split('\n') if line])
 
 @pytest.mark.skipif(
     should_disable_io_stream_redirect(), reason="compute logs disabled for win / py3.6+"
@@ -75,7 +77,7 @@ def test_compute_log_to_disk():
         compute_io_path = manager.get_local_path(result.run_id, step_key, ComputeIOType.STDOUT)
         assert os.path.exists(compute_io_path)
         with open(compute_io_path, 'r') as stdout_file:
-            assert stdout_file.read() == HELLO_SOLID + SEPARATOR
+            assert normalize_file_content(stdout_file.read()) == HELLO_SOLID
 
 
 @pytest.mark.skipif(
@@ -105,7 +107,7 @@ def test_compute_log_to_disk_multiprocess():
         compute_io_path = manager.get_local_path(result.run_id, step_key, ComputeIOType.STDOUT)
         assert os.path.exists(compute_io_path)
         with open(compute_io_path, 'r') as stdout_file:
-            assert stdout_file.read() == SEPARATOR.join([HELLO_SOLID, ''])
+            assert normalize_file_content(stdout_file.read()) == HELLO_SOLID
 
 
 @pytest.mark.skipif(
@@ -127,7 +129,7 @@ def test_compute_log_manager():
     assert manager.is_watch_completed(result.run_id, step_key)
 
     stdout = manager.read_logs_file(result.run_id, step_key, ComputeIOType.STDOUT)
-    assert stdout.data == HELLO_SOLID + SEPARATOR
+    assert normalize_file_content(stdout.data) == HELLO_SOLID
 
     stderr = manager.read_logs_file(result.run_id, step_key, ComputeIOType.STDERR)
     cleaned_logs = stderr.data.replace('\x1b[34m', '').replace('\x1b[0m', '')
@@ -199,7 +201,7 @@ def test_long_solid_names():
     assert manager.is_watch_completed(result.run_id, step_key)
 
     stdout = manager.read_logs_file(result.run_id, step_key, ComputeIOType.STDOUT)
-    assert stdout.data == SEPARATOR.join([HELLO_SOLID, ''])
+    assert normalize_file_content(stdout.data) == HELLO_SOLID
 
 
 def execute_inner(step_key, pipeline_run, instance_ref):
@@ -215,13 +217,13 @@ def inner_step(instance, pipeline_run, step_key):
 
 
 def expected_inner_output(step_key):
-    return SEPARATOR.join(
+    return '\n'.join(
         ["{step_key} inner {num}".format(step_key=step_key, num=i + 1) for i in range(3)]
     )
 
 
 def expected_outer_prefix():
-    return SEPARATOR.join(["outer {num}".format(num=i + 1) for i in range(3)])
+    return '\n'.join(["outer {num}".format(num=i + 1) for i in range(3)])
 
 
 def test_single():
@@ -242,13 +244,13 @@ def test_single():
 
     for step_key in step_keys:
         stdout = instance.compute_log_manager.read_logs_file(run_id, step_key, ComputeIOType.STDOUT)
-        assert stdout.data == expected_inner_output(step_key)
+        assert normalize_file_content(stdout.data) == expected_inner_output(step_key)
 
     full_out = instance.compute_log_manager.read_logs_file(
         run_id, pipeline_name, ComputeIOType.STDOUT
     )
 
-    assert full_out.data.startswith(expected_outer_prefix())
+    assert normalize_file_content(full_out.data).startswith(expected_outer_prefix())
 
 
 def test_multi():
@@ -274,7 +276,7 @@ def test_multi():
 
     for step_key in step_keys:
         stdout = instance.compute_log_manager.read_logs_file(run_id, step_key, ComputeIOType.STDOUT)
-        assert stdout.data == expected_inner_output(step_key)
+        assert normalize_file_content(stdout.data) == expected_inner_output(step_key)
 
     full_out = instance.compute_log_manager.read_logs_file(
         run_id, pipeline_name, ComputeIOType.STDOUT
@@ -290,4 +292,4 @@ def test_multi():
     #         output += expected_inner_output(step_key)
     #     return output
 
-    assert full_out.data.startswith(expected_outer_prefix())
+    assert normalize_file_content(full_out.data).startswith(expected_outer_prefix())
