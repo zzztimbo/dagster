@@ -87,6 +87,7 @@ def execute_windows_tail(path, stream):
     # Instead, invoke a thin script to poll a file and dump output to stdout.  We pass the current
     # pid so that the poll process kills itself if it becomes orphaned
     poll_file = os.path.abspath(poll_compute_logs.__file__)
+    stream = stream if _fileno(stream) else None
     tail_process = subprocess.Popen(
         [sys.executable, poll_file, path, str(os.getpid())], stdout=stream
     )
