@@ -215,7 +215,13 @@ def inner_step(instance, pipeline_run, step_key):
 
 
 def expected_inner_output(step_key):
-    return "{step_key} inner 1\n{step_key} inner 2\n{step_key} inner 3\n".format(step_key=step_key)
+    return SEPARATOR.join(
+        ["{step_key} inner {num}".format(step_key=step_key, num=i + 1) for i in range(3)]
+    )
+
+
+def expected_outer_prefix():
+    return SEPARATOR.join(["outer {num}".format(num=i + 1) for i in range(3)])
 
 
 def test_single():
@@ -242,7 +248,7 @@ def test_single():
         run_id, pipeline_name, ComputeIOType.STDOUT
     )
 
-    assert full_out.data.startswith("outer 1\nouter 2\nouter 3\n")
+    assert full_out.data.startswith(expected_outer_prefix())
 
 
 def test_multi():
@@ -284,4 +290,4 @@ def test_multi():
     #         output += expected_inner_output(step_key)
     #     return output
 
-    assert full_out.data.startswith("outer 1\nouter 2\nouter 3\n")
+    assert full_out.data.startswith(expected_outer_prefix())
