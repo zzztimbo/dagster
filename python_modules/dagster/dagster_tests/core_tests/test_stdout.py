@@ -4,6 +4,7 @@ import os
 import random
 import string
 import sys
+import time
 
 import pytest
 
@@ -216,6 +217,7 @@ def inner_step(instance, pipeline_run, step_key):
         print(step_key, 'inner 1')
         print(step_key, 'inner 2')
         print(step_key, 'inner 3')
+        time.sleep(0.5)
 
 
 def expected_inner_output(step_key):
