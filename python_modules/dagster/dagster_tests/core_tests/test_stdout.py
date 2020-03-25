@@ -231,6 +231,9 @@ def expected_outer_prefix():
     return '\n'.join(["outer {num}".format(num=i + 1) for i in range(3)])
 
 
+@pytest.mark.skipif(
+    should_disable_io_stream_redirect(), reason="compute logs disabled for win / py3.6+"
+)
 def test_single():
     instance = DagsterInstance.local_temp()
     pipeline_name = 'foo_pipeline'
@@ -258,6 +261,9 @@ def test_single():
     assert normalize_file_content(full_out.data).startswith(expected_outer_prefix())
 
 
+@pytest.mark.skipif(
+    should_disable_io_stream_redirect(), reason="compute logs disabled for win / py3.6+"
+)
 def test_multi():
     instance = DagsterInstance.local_temp()
     pipeline_name = 'foo_pipeline'
@@ -290,11 +296,4 @@ def test_multi():
     # The way that the multiprocess compute-logging interacts with pytest (which stubs out the
     # sys.stdout fileno) makes this difficult to test.  The pytest-captured stdout only captures
     # the stdout from the outer process, not also the inner process
-
-    # def expected_full_output():
-    #     output = "outer 1\nouter 2\nouter 3\n"
-    #     for step_key in step_keys:
-    #         output += expected_inner_output(step_key)
-    #     return output
-
     assert normalize_file_content(full_out.data).startswith(expected_outer_prefix())
