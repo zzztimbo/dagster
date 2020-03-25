@@ -53,8 +53,10 @@ def define_pipeline():
 
     return spew_pipeline
 
+
 def normalize_file_content(s):
     return '\n'.join([line for line in s.replace(os.linesep, '\n').split('\n') if line])
+
 
 @pytest.mark.skipif(
     should_disable_io_stream_redirect(), reason="compute logs disabled for win / py3.6+"
