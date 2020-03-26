@@ -35,10 +35,8 @@ def mirror_file_to_file(target_filepath, destination_filepath):
     ensure_file(target_filepath)
     ensure_file(destination_filepath)
 
-    byte_offset = os.path.getsize(target_filepath)
-
     with open(destination_filepath, 'a+', buffering=1) as stream:
-        with tail_to_stream(target_filepath, stream, byte_offset):
+        with tail_to_stream(target_filepath, stream):
             yield
 
 
@@ -84,24 +82,24 @@ def redirect_stream(to_stream=os.devnull, from_stream=sys.stdout):
 
 
 @contextmanager
-def tail_to_stream(path, stream, byte_offset=0):
+def tail_to_stream(path, stream):
     if IS_WINDOWS:
-        with execute_windows_tail(path, stream, byte_offset):
+        with execute_windows_tail(path, stream):
             yield
     else:
-        with execute_posix_tail(path, stream, byte_offset):
+        with execute_posix_tail(path, stream):
             yield
 
 
 @contextmanager
-def execute_windows_tail(path, stream, byte_offset=0):
+def execute_windows_tail(path, stream):
     # Cannot use multiprocessing here because we already may be in a daemonized process
     # Instead, invoke a thin script to poll a file and dump output to stdout.  We pass the current
     # pid so that the poll process kills itself if it becomes orphaned
     poll_file = os.path.abspath(poll_compute_logs.__file__)
     stream = stream if _fileno(stream) else None
     tail_process = subprocess.Popen(
-        [sys.executable, poll_file, path, str(byte_offset), str(os.getpid())], stdout=stream
+        [sys.executable, poll_file, path, str(os.getpid())], stdout=stream
     )
 
     try:
@@ -113,11 +111,10 @@ def execute_windows_tail(path, stream, byte_offset=0):
 
 
 @contextmanager
-def execute_posix_tail(path, stream, byte_offset=0):
+def execute_posix_tail(path, stream):
     # open a subprocess to tail the file and print to stdout
-    offset_arg = '+{}'.format(byte_offset)
     stream = stream if _fileno(stream) else None
-    tail_process = subprocess.Popen(['tail', '-F', '-c', offset_arg, path], stdout=stream)
+    tail_process = subprocess.Popen(['tail', '-F', '-c', '+0', path], stdout=stream)
 
     # open a watcher process to check for the orphaning of the tail process (e.g. when the
     # current process is suddenly killed)

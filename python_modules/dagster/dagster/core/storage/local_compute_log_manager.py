@@ -3,17 +3,16 @@ import os
 import sys
 from collections import defaultdict, deque
 from contextlib import contextmanager
-from contextlib2 import ExitStack
 
+from contextlib2 import ExitStack
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers.polling import PollingObserver
 
 from dagster import check
-from dagster.core.execution.compute_logs import mirror_stream_to_file, mirror_file_to_file
+from dagster.core.execution.compute_logs import mirror_file_to_file, mirror_stream_to_file
 from dagster.core.serdes import ConfigurableClass, ConfigurableClassData
 from dagster.core.storage.pipeline_run import PipelineRun
 from dagster.utils import ensure_dir, touch_file
-
 
 from .compute_log_manager import (
     MAX_BYTES_FILE_READ,
@@ -57,7 +56,7 @@ class LocalComputeLogManager(ComputeLogManager, ConfigurableClass):
         self._io_files.append(tuple([outpath, errpath]))
         self._rebuild_stack()
 
-    def _remove_watch_from_stack(self, outpath, errpath):
+    def _remove_watch_from_stack(self, _outpath, _errpath):
         self._context_stack.close()
         self._io_files.pop()
         self._rebuild_stack()
