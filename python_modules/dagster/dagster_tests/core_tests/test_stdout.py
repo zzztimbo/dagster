@@ -41,7 +41,9 @@ def spawn(_):
 
 @solid(input_defs=[InputDefinition('num', int)], required_resource_keys={'a'})
 def spew(_, num):
+    time.sleep(0.5)
     print(HELLO_SOLID)
+    time.sleep(0.5)
     return num
 
 
