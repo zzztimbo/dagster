@@ -2,7 +2,8 @@ import hashlib
 import os
 import sys
 from collections import defaultdict, deque
-from contextlib import contextmanager, ExitStack
+from contextlib import contextmanager
+from contextlib2 import ExitStack
 
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers.polling import PollingObserver
