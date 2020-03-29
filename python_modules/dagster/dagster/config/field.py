@@ -1,6 +1,9 @@
+import hashlib
+
 from dagster import check
 from dagster.builtins import BuiltinEnum
 from dagster.core.errors import DagsterInvalidConfigError, DagsterInvalidDefinitionError
+from dagster.serdes import serialize_value
 from dagster.utils.backcompat import canonicalize_backcompat_args
 from dagster.utils.typing_api import is_typing_type
 
@@ -252,6 +255,7 @@ class Field(object):
                 'required arguments should not specify default values',
             )
         self._default_value = default_value
+        self._default_value_hash = None
 
         # check explicit default value
         if self.default_provided:
@@ -301,13 +305,15 @@ class Field(object):
         return self._default_value
 
     @property
-    def default_value_as_str(self):
+    def default_value_hash(self):
         check.invariant(self.default_provided, 'Asking for default value when none was provided')
 
-        if callable(self._default_value):
-            return repr(self._default_value)
+        if self._default_value_hash is None:
+            m = hashlib.sha1()  # so that hexdigest is 40, not 64 bytes
+            m.update(serialize_value(self.default_value).encode())
+            self._default_value_hash = m.hexdigest()
 
-        return str(self._default_value)
+        return self._default_value_hash
 
     def __repr__(self):
         return ('Field({config_type}, default={default}, is_required={is_required})').format(
