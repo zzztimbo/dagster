@@ -9,6 +9,7 @@ from dagster.config.config_type import Array
 from dagster.config.config_type import Noneable as ConfigNoneable
 from dagster.core.definitions.events import TypeCheck
 from dagster.core.errors import DagsterInvalidDefinitionError, DagsterInvariantViolationError
+from dagster.core.serdes import whitelist_for_serdes
 from dagster.core.storage.type_storage import TypeStoragePlugin
 
 from .builtin_config_schemas import BuiltinSchemas
@@ -16,6 +17,7 @@ from .config_schema import InputHydrationConfig, OutputMaterializationConfig
 from .marshal import PickleSerializationStrategy, SerializationStrategy
 
 
+@whitelist_for_serdes
 class DagsterTypeKind(PythonEnum):
     ANY = 'ANY'
     SCALAR = 'SCALAR'
