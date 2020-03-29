@@ -15,6 +15,7 @@ from dagster import (
 )
 from dagster.config import Enum as ConfigEnum
 from dagster.config.validate import validate_config
+from dagster.serdes import whitelist_for_serdes
 
 
 def define_test_enum_type():
@@ -70,6 +71,7 @@ def test_enum_in_pipeline_execution():
     )
 
 
+@whitelist_for_serdes
 class NativeEnum(PythonEnum):
     FOO = 1
     BAR = 2
