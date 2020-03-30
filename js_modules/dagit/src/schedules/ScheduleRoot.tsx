@@ -73,7 +73,7 @@ export class ScheduleRoot extends React.Component<
               if (scheduleOrError.__typename === "RunningSchedule") {
                 return (
                   <ScrollContainer>
-                    <Header>This is a asdf change</Header>
+                    <Header>This is a another change</Header>
                     <ScheduleRow schedule={scheduleOrError} />
                     <TicksTable ticks={scheduleOrError.ticksList} />
                     <AttemptsTable attemptList={scheduleOrError.attemptList} />
