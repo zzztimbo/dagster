@@ -1,8 +1,8 @@
 from collections import namedtuple
 
 from dagster import RepositoryDefinition, check
-from dagster.core.serdes import whitelist_for_serdes
 from dagster.core.snap.pipeline_snapshot import PipelineSnapshot
+from dagster.serdes import whitelist_for_serdes
 
 
 @whitelist_for_serdes
