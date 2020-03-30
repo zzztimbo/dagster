@@ -9,7 +9,6 @@ from dagster.config.config_type import Array
 from dagster.config.config_type import Noneable as ConfigNoneable
 from dagster.core.definitions.events import TypeCheck
 from dagster.core.errors import DagsterInvalidDefinitionError, DagsterInvariantViolationError
-from dagster.core.serdes import whitelist_for_serdes
 from dagster.core.storage.type_storage import TypeStoragePlugin
 from dagster.serdes import whitelist_for_serdes
 
