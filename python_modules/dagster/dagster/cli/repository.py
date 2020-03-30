@@ -19,9 +19,9 @@ def create_repository_cli_group():
     name='snapshot',
     help='Snapshot the given repository definition and load into the serialization target.',
 )
-@click.argument('serialization_target', type=click.Path())
+@click.argument('output_file', type=click.Path())
 @repository_target_argument
-def snapshot_command(serialization_target, **kwargs):
+def snapshot_command(output_file, **kwargs):
     handle = handle_for_repo_cli_args(kwargs)
 
     # add the path for the cwd so imports in dynamically loaded code work correctly
@@ -29,7 +29,7 @@ def snapshot_command(serialization_target, **kwargs):
 
     definition = handle.entrypoint.perform_load()
     repository_snapshot = RepositorySnapshot.from_repository_definition(definition)
-    with open(os.path.abspath(serialization_target), 'w+') as fp:
+    with open(os.path.abspath(output_file), 'w+') as fp:
         fp.write(serialize_dagster_namedtuple(repository_snapshot))
 
 
