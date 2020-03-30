@@ -113,7 +113,7 @@ export class RunTable extends React.Component<RunTableProps> {
           <NonIdealState
             icon="history"
             title="Pipeline Runs"
-            description="No runs to display. Use the Execute tab to start a pipeline."
+            description="No runs to display. Use the Playground to start a pipeline."
           />
         </div>
       );
@@ -176,10 +176,10 @@ const RunRow: React.FunctionComponent<{ run: RunTableRunFragment }> = ({
         ) : run.status === "FAILURE" ? (
           <div style={{ marginBottom: 4 }}> Failed to start</div>
         ) : (
-          <div style={{ marginBottom: 4 }}>
-            <Icon icon="calendar" /> Starting...
-          </div>
-        )}
+              <div style={{ marginBottom: 4 }}>
+                <Icon icon="calendar" /> Starting...
+              </div>
+            )}
         <RunTime startUnix={run.stats.startTime} endUnix={run.stats.endTime} />
       </>
     );
@@ -220,14 +220,14 @@ const RunRow: React.FunctionComponent<{ run: RunTableRunFragment }> = ({
             <Icon icon="diagram-tree" /> {run.pipeline.name}
           </Link>
         ) : (
-          <>
-            <Icon icon="diagram-tree" color={Colors.GRAY3} />
+            <>
+              <Icon icon="diagram-tree" color={Colors.GRAY3} />
             &nbsp;
             <Tooltip content={TOOLTIP_MESSAGE_PIPELINE_MISSING}>
-              {run.pipeline.name}
-            </Tooltip>
-          </>
-        )}
+                {run.pipeline.name}
+              </Tooltip>
+            </>
+          )}
       </RowColumn>
       <RowColumn>
         <div>
@@ -365,7 +365,7 @@ const RunActionsMenu: React.FunctionComponent<{
           <MenuDivider />
 
           <MenuItem
-            text="Open in Execute Tab..."
+            text="Open in Playground..."
             disabled={!infoReady}
             icon="edit"
             target="_blank"

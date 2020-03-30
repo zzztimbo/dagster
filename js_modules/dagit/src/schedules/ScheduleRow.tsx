@@ -72,10 +72,10 @@ export const ScheduleRow: React.FunctionComponent<{
   const displayName = match ? (
     <ScheduleName>{name}</ScheduleName>
   ) : (
-    <Link to={`/schedules/${name}`}>
-      <ScheduleName>{name}</ScheduleName>
-    </Link>
-  );
+      <Link to={`/schedules/${name}`}>
+        <ScheduleName>{name}</ScheduleName>
+      </Link>
+    );
 
   return (
     <RowContainer key={name}>
@@ -148,8 +148,8 @@ export const ScheduleRow: React.FunctionComponent<{
               {getNaturalLanguageCronString(cronSchedule)}
             </Tooltip>
           ) : (
-            <div>-</div>
-          )}
+              <div>-</div>
+            )}
         </div>
       </RowColumn>
       <RowColumn style={{ flex: 1, textAlign: "center" }}>
@@ -260,7 +260,7 @@ export const ScheduleRow: React.FunctionComponent<{
               />
               {environmentConfigYaml !== null ? (
                 <MenuItem
-                  text="Open in Execute Tab..."
+                  text="Open in Playground..."
                   icon="edit"
                   target="_blank"
                   href={`/playground/${pipelineName}/setup?${qs.stringify({
@@ -270,12 +270,12 @@ export const ScheduleRow: React.FunctionComponent<{
                   })}`}
                 />
               ) : (
-                <MenuItem
-                  text="Open in Execute Tab..."
-                  icon="edit"
-                  disabled={true}
-                />
-              )}
+                  <MenuItem
+                    text="Open in Playground..."
+                    icon="edit"
+                    disabled={true}
+                  />
+                )}
               <MenuDivider />
               <MenuItem
                 text="Copy Path to Debug Logs"
@@ -393,10 +393,10 @@ export const AttemptStatus = styled.div<{ status: ScheduleAttemptStatus }>`
     }[status])};
   &:hover {
     background: ${({ status }) =>
-      ({
-        [ScheduleAttemptStatus.SUCCESS]: Colors.GREEN2,
-        [ScheduleAttemptStatus.ERROR]: Colors.RED3,
-        [ScheduleAttemptStatus.SKIPPED]: Colors.GOLD3
-      }[status])};
+    ({
+      [ScheduleAttemptStatus.SUCCESS]: Colors.GREEN2,
+      [ScheduleAttemptStatus.ERROR]: Colors.RED3,
+      [ScheduleAttemptStatus.SKIPPED]: Colors.GOLD3
+    }[status])};
   }
 `;
