@@ -5,8 +5,8 @@ import click
 
 from dagster.cli.load_handle import handle_for_repo_cli_args
 from dagster.cli.pipeline import repository_target_argument
-from dagster.core.serdes import serialize_dagster_namedtuple
 from dagster.core.snap.repository_snapshot import RepositorySnapshot
+from dagster.serdes import serialize_dagster_namedtuple
 
 
 def create_repository_cli_group():

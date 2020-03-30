@@ -2,7 +2,7 @@ from collections import namedtuple
 
 from dagster import check
 from dagster.core.definitions import PipelineDefinition
-from dagster.core.serdes import whitelist_for_serdes
+from dagster.serdes import whitelist_for_serdes
 
 from .config_types import ConfigSchemaSnapshot, build_config_schema_snapshot
 from .dagster_types import DagsterTypeNamespaceSnapshot, build_dagster_type_namespace_snapshot
