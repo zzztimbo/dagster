@@ -3,7 +3,6 @@ import sys
 
 import click
 
-from dagster import RepositoryDefinition, DagsterInvariantViolationError
 from dagster.cli.load_handle import handle_for_repo_cli_args
 from dagster.cli.pipeline import repository_target_argument
 from dagster.core.serdes import serialize_dagster_namedtuple
