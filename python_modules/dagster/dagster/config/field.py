@@ -236,6 +236,9 @@ class Field(object):
         check.opt_bool_param(is_optional, 'is_optional')
         check.opt_bool_param(is_required, 'is_required')
 
+        if default_value != FIELD_NO_DEFAULT_PROVIDED:
+            check.invariant(not (callable(default_value)))
+
         canonical_is_required = canonicalize_backcompat_args(
             new_val=is_required,
             new_arg='is_required',
@@ -295,8 +298,8 @@ class Field(object):
     def default_value(self):
         check.invariant(self.default_provided, 'Asking for default value when none was provided')
 
-        if callable(self._default_value):
-            return self._default_value()
+        # if callable(self._default_value):
+        #     return self._default_value()
 
         return self._default_value
 
@@ -304,8 +307,8 @@ class Field(object):
     def default_value_as_str(self):
         check.invariant(self.default_provided, 'Asking for default value when none was provided')
 
-        if callable(self._default_value):
-            return repr(self._default_value)
+        # if callable(self._default_value):
+        #     return repr(self._default_value)
 
         return str(self._default_value)
 
