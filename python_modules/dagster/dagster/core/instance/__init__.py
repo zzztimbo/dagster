@@ -232,10 +232,6 @@ class DagsterInstance:
     # flags
 
     @property
-    def is_persistent(self):
-        return self._instance_type == InstanceType.PERSISTENT
-
-    @property
     def is_ephemeral(self):
         return self._instance_type == InstanceType.EPHEMERAL
 
@@ -297,11 +293,11 @@ class DagsterInstance:
 
     # schedule storage
 
-    @property
-    def schedule_storage(self):
-        return self._schedule_storage
+    # @property
+    # def schedule_storage(self):
+    #     return self._schedule_storage
 
-    # schedule storage
+    # scheduler
 
     @property
     def scheduler(self):
@@ -402,12 +398,6 @@ class DagsterInstance:
                     )
 
                 return self.get_run_by_id(pipeline_run.run_id)
-
-    def add_run(self, pipeline_run):
-        return self._run_storage.add_run(pipeline_run)
-
-    def handle_run_event(self, run_id, event):
-        return self._run_storage.handle_run_event(run_id, event)
 
     def has_run(self, run_id):
         return self._run_storage.has_run(run_id)
